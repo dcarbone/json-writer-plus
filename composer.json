@@ -6,8 +6,7 @@
     "keywords": [
         "php",
         "json",
-        "jsonwriter",
-        "xmlwriter"
+        "jsonwriter"
     ],
     "homepage": "https://github.com/dcarbone/json-writer-plus",
     "license": "GPLv3",
@@ -22,6 +21,7 @@
     "require" : {
         "php" : ">=5.3.3"
     },
+
     "autoload" : {
         "psr-4" : {
             "DCarbone\\" : "src/"
