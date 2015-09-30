@@ -1,5 +1,25 @@
 <?php namespace DCarbone;
 
+    /*
+
+    OO Json object building for PHP
+    Copyright (C) 2012-2015  Daniel Paul Carbone
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    */
+
 /**
  * Class JsonObject
  * @package DCarbone
@@ -19,12 +39,6 @@ class JsonObject
     protected $current = null;
 
     /**
-     * Parent of the current element
-     * @var array|\stdClass
-     */
-    protected $parent = null;
-
-    /**
      * Most recent key set in an object
      * @var string
      */
@@ -39,7 +53,7 @@ class JsonObject
     /**
      * Initialize a new object
      *
-     * @throws \Exception
+     * @throws \RuntimeException
      * @return bool
      */
     public function startObject()
@@ -60,7 +74,7 @@ class JsonObject
             return $this->appendToObject($obj);
 
         // If we reach this point, something weird has happened
-        throw new \Exception('In-memory JSON representation is unstable');
+        throw new \RuntimeException('In-memory JSON representation is unstable');
     }
 
     /**
@@ -71,15 +85,11 @@ class JsonObject
      */
     public function endObject()
     {
-        if ($this->parent === null)
-            return false;
-
         if (!is_object($this->current))
             throw new \Exception('Cannot end non-object with endObject');
 
-        $this->current = &$this->parent;
         array_pop($this->pathKeys);
-        $this->getParent();
+        $this->identifyCurrent();
         return true;
     }
 
@@ -116,16 +126,11 @@ class JsonObject
      */
     public function endArray()
     {
-        if ($this->parent === null)
-            return false;
-
         if (!is_array($this->current))
             throw new \Exception('Cannot end non-array with endArray');
 
-        unset($this->current);
-        $this->current = &$this->parent;
         array_pop($this->pathKeys);
-        $this->getParent();
+        $this->identifyCurrent();
         return true;
     }
 
@@ -146,7 +151,7 @@ class JsonObject
         $this->current = &$this->current->$key;
         $this->currentObjKey = null;
         $this->pathKeys[] = $key;
-        $this->getParent();
+        $this->identifyCurrent();
         return true;
     }
 
@@ -161,7 +166,7 @@ class JsonObject
         $count = array_push($this->current, $data);
         $this->current = &$this->current[($count-1)];
         $this->pathKeys[] = ($count - 1);
-        $this->getParent();
+        $this->identifyCurrent();
         return true;
     }
 
@@ -244,24 +249,22 @@ class JsonObject
      *
      * @return void
      */
-    protected function getParent()
+    protected function identifyCurrent()
     {
-        unset($this->parent);
+        unset($this->current);
 
-        $parent = &$this->data;
+        $current = &$this->data;
 
-        $count = count($this->pathKeys);
-
-        for($i = 0; $i < ($count - 1); $i++)
+        foreach($this->pathKeys as $I=>$pathKey)
         {
-            $k = $this->pathKeys[$i];
-            if (is_object($parent))
-                $parent = &$parent->$k;
-            else if (is_array($parent))
-                $parent = &$parent[$k];
-        }
 
-        $this->parent = &$parent;
+
+            if (is_object($current))
+                $current = &$current->$pathKey;
+            else if (is_array($current))
+                $current = &$current[$pathKey];
+        }
+        $this->current = &$current;
     }
 
     /**

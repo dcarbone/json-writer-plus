@@ -10,11 +10,11 @@ class.
 
 Add
 
-```
-"dcarbone/json-writer-plus" : "0.1.*"
+```json
+"dcarbone/json-writer-plus" : "0.2.*"
 ```
 
-To your application's ``` composer.json ``` file.
+To your application's `composer.json` file.
 
 Learn more about Composer here: <a href="https://getcomposer.org/">https://getcomposer.org/</a>
 
@@ -176,9 +176,10 @@ echo '</pre>';
 
 The above will output:
 
-```php
+```json
 ["Look at all my cool information","My information is the coolest"]
-
+```
+```php
 array(2) {
   [0]=>
   string(31) "Look at all my cool information"
@@ -187,12 +188,12 @@ array(2) {
 }
 ```
 
-**Note**: If you pass in an associative array, it will be interpreted into an object as such:
-
 ```php
 $array = array(
     'Look at all my cool information',
-    'property1' => 'property 1 is the coolest property'
+    'property1' => 'property 1 is the coolest property',
+    'property2' => 'property2 is the next coolest property',
+    'this is also cool information'
 );
 
 $jsonWriter = new JsonWriterPlus();
@@ -211,45 +212,27 @@ echo '</pre>';
 
 Will result in:
 
-```php
-{"0":"Look at all my cool information","property1":"property 1 is the coolest property"}
+```json
+["Look at all my cool information",{"property1":"property 1 is the coolest property"},{"property2":"property2 is the next coolest property"},"this is also cool information"]
+```
 
-object(stdClass)#5 (2) {
-  ["0"]=>
+```php
+array(4) {
+  [0]=>
   string(31) "Look at all my cool information"
-  ["property1"]=>
-  string(34) "property 1 is the coolest property"
+  [1]=>
+  object(stdClass)#4 (1) {
+    ["property1"]=>
+    string(34) "property 1 is the coolest property"
+  }
+  [2]=>
+  object(stdClass)#5 (1) {
+    ["property2"]=>
+    string(38) "property2 is the next coolest property"
+  }
+  [3]=>
+  string(29) "this is also cool information"
 }
 ```
 
 You may also perform similar actions with an object via `appendObject($object)`.
-
-## Character Conversion
-
-One of the potentially most frustrating things when working with data from multiple different systems can be character encoding conversion.
-
-I have tried to make this as simple as possible for you to get around, keeping in mind a few things:
-
-* Json data MUST be encoded in UTF-8
-* The ability of your system to convert encodings will depend on your specific PHP instance
-
-There are 4 public arrays that are used to help facilitate this:
-
-* **$strSearchCharacters**
-* **$strReplaceCharacters**
-* **$regexpSearchCharacters**
-* **$regexpReplaceCharacters**
-
-### str_ireplace && preg_replace
-
-For a full debrief on these two functions:
-* <a href="http://www.php.net//manual/en/function.str-ireplace.php" target="_blank">str_ireplace</a>
-* <a href="http://us3.php.net//manual/en/function.preg-replace.php" target="_blank">preg_replace</a>
-
-Every string value that is written to either an object or an array within this library goes through these two functions if the
-**xxSearchCharacters** array for the corresponding action contains values.  It is then replaced with the corresponding position **xxReplaceCharacters** value.
-
-### Encoding
-
-After character replacement has occurred, the method `encodeString` is called, and utilizes
-PHP's <a href="http://www.php.net//manual/en/function.mb-detect-encoding.php" target="_blank">mb_detect_encoding</a> and <a href="http://www.php.net//manual/en/function.mb-convert-encoding.php" target="_blank">mb_convert_encoding</a> functions.

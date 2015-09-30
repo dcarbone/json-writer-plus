@@ -1,43 +1,31 @@
 <?php namespace DCarbone;
 
+    /*
+
+    OO Json object building for PHP
+    Copyright (C) 2012-2015  Daniel Paul Carbone
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    */
+
 /**
  * Class JsonWriterPlus
  * @package DCarbone
  */
 class JsonWriterPlus
 {
-    /**
-     * str_replace search value(s)
-     * @var array
-     */
-    public $strSearchCharacters = array(
-        '&#169;',
-        '&#xa9;',
-        '&copy;'
-    );
-
-    /**
-     * str_replace replace value(s)
-     * @var array
-     */
-    public $strReplaceCharacters = array(
-        '\u00A9', // copyright symbol
-        '\u00A9',
-        '\u00A9'
-    );
-
-    /**
-     * RegExp search value(s)
-     * @var array
-     */
-    public $regexpSearchCharacters = array();
-
-    /**
-     * RegExp replace value(s)
-     * @var array
-     */
-    public $regexpReplaceCharacters = array();
-
     /**
      * JsonObject Instance
      * @var JsonObject
@@ -61,18 +49,6 @@ class JsonWriterPlus
      * @var integer
      */
     protected $commentCount = 0;
-
-    /**
-     * Quick helper function to determine if this object
-     * is editable
-     *
-     * @access  public
-     * @return  bool
-     */
-    protected function canEdit()
-    {
-        return ($this->started === true && $this->ended === false);
-    }
 
     /**
      * Append a new object to the JSON output
@@ -185,10 +161,7 @@ class JsonWriterPlus
             }
 
             if (is_string($value))
-            {
-                $value = $this->convertCharacters($value);
                 $value = $this->encodeString($value);
-            }
 
             return $this->json->writeValue($value);
         }
@@ -247,25 +220,35 @@ class JsonWriterPlus
     {
         if ($this->canEdit())
         {
-            foreach(array_keys($array) as $key)
+            $objectOpened = false;
+            $this->writeStartArray();
+            foreach($array as $k=>$v)
             {
-                if (!is_int($key))
-                    return $this->appendObject((object)$array);
+                if (is_string($k) && false === ctype_digit($k))
+                {
+                    $this->writeStartObject();
+                    $objectOpened = true;
+                    $this->writeObjectPropertyName($k);
+                }
+
+                if (is_scalar($v))
+                    $this->writeValue($v);
+                else if (is_array($v))
+                    $this->appendArray($v);
+                else if (is_object($v))
+                    $this->appendObject($v);
+                else
+                    throw new \InvalidArgumentException('Value of type '.gettype($v).' seen during appendArray call');
+
+                if ($objectOpened)
+                {
+                    $this->writeEndObject();
+                    $objectOpened = false;
+                }
             }
 
-            $this->writeStartArray();
-            foreach($array as $key=>$value)
-            {
-                if (is_scalar($value))
-                    $this->writeValue($value);
-                else if (is_array($value))
-                    $this->appendArray($value);
-                else if (is_object($value))
-                    $this->appendObject($value);
-                else
-                    throw new \InvalidArgumentException('Value of type '.gettype($value).' seen during appendArray call');
-            }
             $this->writeEndArray();
+
             return true;
         }
         return false;
@@ -328,61 +311,6 @@ class JsonWriterPlus
     }
 
     /**
-     * Convert characters
-     *
-     * @param   string $string  Input string
-     * @throws \InvalidArgumentException
-     * @return  string
-     */
-    protected function convertCharacters($string)
-    {
-        $strSearch = null;
-        $strReplace = null;
-        $regexpSearch = null;
-        $regexpReplace = null;
-
-        // See if we have str_replace keys
-        if ((is_string($this->strSearchCharacters) && $this->strSearchCharacters !== "") ||
-            (is_array($this->strSearchCharacters) && count($this->strSearchCharacters) > 0))
-        {
-            $strSearch = $this->strSearchCharacters;
-        }
-
-        // If we have search keys, see if we have replace keys
-        if ($strSearch !== null &&
-            (is_string($this->strReplaceCharacters) && $this->strReplaceCharacters !== "") ||
-            (is_array($this->strReplaceCharacters) && count($this->strReplaceCharacters) > 0))
-        {
-            $strReplace = $this->strReplaceCharacters;
-        }
-
-        // See if we have preg_replace keys
-        if ((is_string($this->regexpSearchCharacters) && $this->regexpSearchCharacters !== "") ||
-            (is_array($this->regexpSearchCharacters) && count($this->regexpSearchCharacters) > 0))
-        {
-            $regexpSearch = $this->regexpSearchCharacters;
-        }
-
-        // If we have search keys, see if we have replace keys
-        if ($regexpSearch !== null &&
-            (is_string($this->regexpReplaceCharacters) && $this->regexpReplaceCharacters !== "") ||
-            (is_array($this->regexpReplaceCharacters) && count($this->regexpReplaceCharacters) > 0))
-        {
-            $regexpReplace = $this->regexpReplaceCharacters;
-        }
-
-        // Execute str_replace
-        if ($strSearch !== null && $strReplace !== null)
-            $string = str_replace($strSearch, $strReplace, $string);
-
-        // Execute preg_replace
-        if ($regexpSearch !== null && $regexpReplace !== null)
-            $string = preg_replace($regexpSearch, $regexpReplace, $string);
-
-        return $string;
-    }
-
-    /**
      * Apply requested encoding type to string
      *
      * @link  http://php.net/manual/en/function.mb-detect-encoding.php
@@ -399,11 +327,32 @@ class JsonWriterPlus
         if ($detect === false)
             throw new \InvalidArgumentException('Could not convert string to UTF-8 for JSON output');
 
+        // Just to be safe, attempt to convert all HTML characters to UTF-8 counterparts
+        // Borrowed from http://php.net/manual/en/function.html-entity-decode.php#104617
+        $string = preg_replace_callback(
+            '{(&#[0-9]+;)}',
+            function($m) {
+                return mb_convert_encoding($m[1], 'UTF-8', 'HTML-ENTITIES');
+            },
+            $string);
+
         // If the current encoding is already the requested encoding
         if (is_string($detect) && strtolower($detect) === 'utf-8')
             return $string;
 
         // Else, perform encoding conversion
         return mb_convert_encoding($string, 'UTF-8', $detect);
+    }
+
+    /**
+     * Quick helper function to determine if this object
+     * is editable
+     *
+     * @access  public
+     * @return  bool
+     */
+    protected function canEdit()
+    {
+        return ($this->started === true && $this->ended === false);
     }
 }
