@@ -283,7 +283,18 @@ class JsonWriterPlus
     }
 
     /**
-     * Get JSON string from contents;
+     * @deprecated Use getEncoded instead
+     * @param int $options
+     * @return string
+     * @throws \Exception
+     */
+    public function getJsonString($options = 0)
+    {
+       return $this->getEncoded($options);
+    }
+
+    /**
+     * Get encoded json string of current JsonObject state
      *
      * @link  http://php.net/manual/en/function.json-encode.php
      * @link  http://www.php.net/manual/en/json.constants.php
@@ -292,12 +303,12 @@ class JsonWriterPlus
      * @throws \Exception
      * @return  string
      */
-    public function getJsonString($options = 0)
+    public function getEncoded($options = 0)
     {
         if (!is_int($options))
             throw new \Exception('Cannot pass non-int value to getJSON');
 
-        return json_encode($this->json->getData(), $options);
+        return json_encode($this->json->jsonSerialize(), $options);
     }
 
     /**
@@ -309,6 +320,28 @@ class JsonWriterPlus
     {
         return $this->json->getData();
     }
+
+    /**
+     * @return JsonObject
+     */
+    public function getJsonObject()
+    {
+        return $this->json;
+    }
+
+    /**
+     * Quick helper function to determine if this object
+     * is editable
+     *
+     * @access  public
+     * @return  bool
+     */
+    protected function canEdit()
+    {
+        return ($this->started === true && $this->ended === false);
+    }
+
+    // ----------------------------
 
     /**
      * Apply requested encoding type to string
@@ -342,17 +375,5 @@ class JsonWriterPlus
 
         // Else, perform encoding conversion
         return mb_convert_encoding($string, 'UTF-8', $detect);
-    }
-
-    /**
-     * Quick helper function to determine if this object
-     * is editable
-     *
-     * @access  public
-     * @return  bool
-     */
-    protected function canEdit()
-    {
-        return ($this->started === true && $this->ended === false);
     }
 }

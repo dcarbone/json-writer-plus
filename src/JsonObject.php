@@ -20,11 +20,17 @@
 
     */
 
+if (interface_exists('\\JsonSerializable')) {
+    interface JsonSerializable extends \JsonSerializable {}
+} else {
+    interface JsonSerializable { public function jsonSerialize (); }
+}
+
 /**
  * Class JsonObject
  * @package DCarbone
  */
-class JsonObject
+class JsonObject implements \Serializable, JsonSerializable
 {
     /**
      * The data housed in this object
@@ -135,42 +141,6 @@ class JsonObject
     }
 
     /**
-     * Append new Array or Object to current Object
-     *
-     * @param  mixed $data  Array or Object being appended
-     * @throws \Exception
-     * @return bool
-     */
-    protected function appendToObject($data)
-    {
-        if ($this->currentObjKey === null)
-            throw new \Exception('Cannot assign value without first assigning key to object');
-
-        $key = $this->currentObjKey;
-        $this->current->$key = $data;
-        $this->current = &$this->current->$key;
-        $this->currentObjKey = null;
-        $this->pathKeys[] = $key;
-        $this->identifyCurrent();
-        return true;
-    }
-
-    /**
-     * Append new Array or Object to current Array
-     *
-     * @param  mixed  $data  Array or Object being appended
-     * @return bool
-     */
-    protected function appendToArray($data)
-    {
-        $count = array_push($this->current, $data);
-        $this->current = &$this->current[($count-1)];
-        $this->pathKeys[] = ($count - 1);
-        $this->identifyCurrent();
-        return true;
-    }
-
-    /**
      * Write new property for Object
      *
      * @param  string $propertyName  Name of property
@@ -180,7 +150,7 @@ class JsonObject
     public function writeObjectPropertyName($propertyName)
     {
         if (!is_string($propertyName) && !is_int($propertyName))
-            throw new \Exception('Can only assign string or Integer values to object property name!');
+            throw new \Exception('Can only assign string or integer values to object property name!');
 
         if (!is_object($this->current))
             throw new \Exception('Tried to write property value to non-object');
@@ -212,6 +182,91 @@ class JsonObject
             return $this->writeValueToObject($value);
 
         throw new \Exception('In-memory JSON representation is unstable');
+    }
+
+    /**
+     * Returns the data
+     *
+     * @return \stdClass|array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * String representation of object
+     * @link http://php.net/manual/en/serializable.serialize.php
+     * @return string the string representation of the object or null
+     * @since 5.1.0
+     */
+    public function serialize()
+    {
+        return serialize(array(
+            $this->data,
+            $this->currentObjKey,
+            $this->pathKeys
+        ));
+    }
+
+    /**
+     * Constructs the object
+     * @link http://php.net/manual/en/serializable.unserialize.php
+     * @param string $serialized The string representation of the object.
+     * @return void
+     * @since 5.1.0
+     */
+    public function unserialize($serialized)
+    {
+        $unserialized = unserialize($serialized);
+        $this->data = $unserialized[0];
+        $this->currentObjKey = $unserialized[1];
+        $this->pathKeys = $unserialized[2];
+        $this->identifyCurrent();
+    }
+
+    /**
+     * @return array|\stdClass
+     */
+    public function jsonSerialize()
+    {
+        return $this->data;
+    }
+
+    // --------------------------
+
+    /**
+     * Append new Array or Object to current Object
+     *
+     * @param  mixed $data  Array or Object being appended
+     * @throws \Exception
+     * @return bool
+     */
+    protected function appendToObject($data)
+    {
+        if ($this->currentObjKey === null)
+            throw new \Exception('Cannot assign object value without first assigning key to object');
+
+        $key = $this->currentObjKey;
+        $this->current->$key = $data;
+        $this->currentObjKey = null;
+        $this->pathKeys[] = $key;
+        $this->identifyCurrent();
+        return true;
+    }
+
+    /**
+     * Append new Array or Object to current Array
+     *
+     * @param  mixed  $data  Array or Object being appended
+     * @return bool
+     */
+    protected function appendToArray($data)
+    {
+        $count = array_push($this->current, $data);
+        $this->pathKeys[] = ($count - 1);
+        $this->identifyCurrent();
+        return true;
     }
 
     /**
@@ -255,25 +310,13 @@ class JsonObject
 
         $current = &$this->data;
 
-        foreach($this->pathKeys as $I=>$pathKey)
+        foreach($this->pathKeys as $pathKey)
         {
-
-
             if (is_object($current))
                 $current = &$current->$pathKey;
             else if (is_array($current))
                 $current = &$current[$pathKey];
         }
         $this->current = &$current;
-    }
-
-    /**
-     * Returns the data
-     *
-     * @return mixed
-     */
-    public function getData()
-    {
-        return $this->data;
     }
 }
