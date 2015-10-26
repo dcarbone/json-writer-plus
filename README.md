@@ -60,7 +60,7 @@ $jsonWriter->writeEndObject();
 $jsonWriter->endJson();
 
 // See the "jsonized" version of the above actions
-echo $jsonWriter->getJsonString()."\n";
+echo $jsonWriter->getEncoded()."\n";
 
 // See the internal representation of the above actions as PHP sees it
 echo '<pre>';
@@ -119,7 +119,7 @@ $jsonWriter->writeEndArray();
 
 $jsonWriter->endJson();
 
-echo $jsonWriter->getJsonString()."\n";
+echo $jsonWriter->getEncoded()."\n";
 echo '<pre>';
 var_dump($jsonWriter->getUnencoded());
 echo '</pre>';
@@ -168,7 +168,7 @@ $jsonWriter->appendArray($array);
 
 $jsonWriter->endJson();
 
-echo $jsonWriter->getJsonString()."\n";
+echo $jsonWriter->getEncoded()."\n";
 echo '<pre>';
 var_dump($jsonWriter->getUnencoded());
 echo '</pre>';
@@ -204,7 +204,7 @@ $jsonWriter->appendArray($array);
 
 $jsonWriter->endJson();
 
-echo $jsonWriter->getJsonString()."\n";
+echo $jsonWriter->getEncoded()."\n";
 echo '<pre>';
 var_dump($jsonWriter->getUnencoded());
 echo '</pre>';
