@@ -1,36 +1,19 @@
 <?php namespace DCarbone;
 
-    /*
-
+/*
     OO Json object building for PHP
-    Copyright (C) 2012-2015  Daniel Paul Carbone
+    Copyright (C) 2012-2018  Daniel Paul Carbone
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-    */
-
-if (interface_exists('\\JsonSerializable')) {
-    interface JsonSerializable extends \JsonSerializable {}
-} else {
-    interface JsonSerializable { public function jsonSerialize (); }
-}
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
 
 /**
  * Class JsonObject
  * @package DCarbone
  */
-class JsonObject implements \Serializable, JsonSerializable
+class JsonObject implements \Serializable, \JsonSerializable
 {
     /**
      * The data housed in this object
@@ -61,6 +44,7 @@ class JsonObject implements \Serializable, JsonSerializable
      *
      * @throws \RuntimeException
      * @return bool
+     * @throws \Exception
      */
     public function startObject()
     {

@@ -1,24 +1,13 @@
 <?php namespace DCarbone;
 
-    /*
-
+/*
     OO Json object building for PHP
-    Copyright (C) 2012-2015  Daniel Paul Carbone
+    Copyright (C) 2012-2018  Daniel Paul Carbone
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-    */
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
 
 /**
  * Class JsonWriterPlus
@@ -54,6 +43,7 @@ class JsonWriterPlus
      * Append a new object to the JSON output
      *
      * @return  bool
+     * @throws \Exception
      */
     public function writeStartObject()
     {
@@ -67,6 +57,7 @@ class JsonWriterPlus
      * End current object
      *
      * @return  bool
+     * @throws \Exception
      */
     public function writeEndObject()
     {
@@ -80,6 +71,7 @@ class JsonWriterPlus
      * Append new Array
      *
      * @return  bool
+     * @throws \Exception
      */
     public function writeStartArray()
     {
@@ -93,6 +85,7 @@ class JsonWriterPlus
      * End current Array
      *
      * @return  bool
+     * @throws \Exception
      */
     public function writeEndArray()
     {
@@ -105,8 +98,9 @@ class JsonWriterPlus
     /**
      * Write object property
      *
-     * @param   string  $property  Property Name
+     * @param   string $property Property Name
      * @return  bool
+     * @throws \Exception
      */
     public function writeObjectPropertyName($property)
     {
@@ -119,9 +113,10 @@ class JsonWriterPlus
     /**
      * Defines a property with value of string
      *
-     * @param   string  $property  Name of Property
-     * @param   string  $value     Value of Property
+     * @param   string $property Name of Property
+     * @param   string $value Value of Property
      * @return  Bool
+     * @throws \Exception
      */
     public function writeObjectProperty($property, $value)
     {
@@ -137,9 +132,10 @@ class JsonWriterPlus
     /**
      * Write string Value to Array or Object
      *
-     * @param   string $value  Value
+     * @param   string $value Value
      * @throws \InvalidArgumentException
      * @return  bool
+     * @throws \Exception
      */
     public function writeValue($value)
     {
@@ -173,6 +169,7 @@ class JsonWriterPlus
      * @param mixed $object
      * @return bool
      * @throws \InvalidArgumentException
+     * @throws \Exception
      */
     public function appendObject($object)
     {
@@ -215,6 +212,7 @@ class JsonWriterPlus
      * @param array $array
      * @return bool
      * @throws \InvalidArgumentException
+     * @throws \Exception
      */
     public function appendArray(array $array)
     {
